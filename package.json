@@ -14,6 +14,9 @@
   "license": "ISC",
   "dependencies": {
     "@ethersproject/experimental": "^5.0.8",
+    "@truffle/contract": "^4.3.5",
+    "@truffle/hdwallet-provider": "^1.2.1",
+    "axios": "^0.21.1",
     "body-parser": "^1.19.0",
     "cors": "^2.8.5",
     "dotenv": "^8.2.0",

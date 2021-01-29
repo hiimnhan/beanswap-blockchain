@@ -1,8 +1,8 @@
 require('dotenv').config();
 import { ethers } from 'ethers';
-import { NonceManager } from '@ethersproject/experimental';
 import EnvConfig from '../configs/env';
-import {parseAmount}  from '../utils';
+import { scanRoutes, SCAN_TESTNET_URL } from '../constants'
+const axios = require('axios');
 export const initProvider = () => {
     return new ethers.providers.JsonRpcProvider(EnvConfig.RPC_ENPOINT);
 }
@@ -29,7 +29,6 @@ export const createRandomAccount = async () => {
     const wallet = await ethers.Wallet.createRandom().connect(provider);
     return {
         address: wallet.address,
-        mnemonic: wallet.mnemonic,
         privateKey: wallet.privateKey
     }
 }
@@ -44,12 +43,28 @@ export const transfer = async (receiverAddress, amount, signer) => {
     const options = {
         gasLimit: 150000,
         gasPrice: ethers.utils.parseUnits('14.0', 'gwei'),
-        //nonce: currentNonce + 1
     }
     const beanContract = await getTokenContract(signer);
     await beanContract.transfer(receiverAddress, amount, options);
+    const transactionId = await getLatestTransactionId(signer.address);
+    return {
+        sourceAddress: signer.address,
+        destAddress: receiverAddress,
+        transactionId,
+        amount
+    }
 
 };
+
+/**
+ * @dev get balance of address
+ * @param {address to get balance} address 
+ */
+export const getBalance = async (address) => {
+    const beanContract = await getTokenContract(systemWallet);
+    const balance = await beanContract.balanceOf(address);      
+    return balance;
+}
 
 /**
  * @dev adjust min fee
@@ -69,10 +84,24 @@ export const connectWalletWithMnemonic = async (mnemonic) => {
 
 }
 
+/**
+ * @dev connect wallet by privateKey
+ * @param {private key of wallet } privateKey 
+ */
 export const connectWalletWithPrivateKey = async (privateKey) => {
     const wallet = await new ethers.Wallet(privateKey, provider);
     return wallet;
 }
+
+export const getLatestTransactionId = async (address) => {
+    const transactions = await axios.
+        get(`${SCAN_TESTNET_URL}${scanRoutes.GET_TRANSACTIONS}${address}`)
+            .then(res => res.data.items);
+    const latestTransactionId = transactions[0].hash;
+    return latestTransactionId;
+}
+
+
 
 
 

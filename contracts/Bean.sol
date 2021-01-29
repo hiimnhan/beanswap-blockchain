@@ -1,112 +1,14 @@
-pragma solidity ^0.4.24;
+// SPDX-License-Identifier: MIT
+pragma solidity >=0.4.22 <0.9.0;
 
-library SafeMath {
-    /**
-     * @dev Multiplies two numbers, reverts on overflow.
-     */
-    function mul(uint256 a, uint256 b) internal pure returns (uint256) {
-        // Gas optimization: this is cheaper than requiring 'a' not being zero, but the
-        // benefit is lost if 'b' is also tested.
-        // See: https://github.com/OpenZeppelin/openzeppelin-solidity/pull/522
-        if (a == 0) {
-            return 0;
-        }
-
-        uint256 c = a * b;
-        require(c / a == b);
-
-        return c;
-    }
-
-    /**
-     * @dev Integer division of two numbers truncating the quotient, reverts on division by zero.
-     */
-    function div(uint256 a, uint256 b) internal pure returns (uint256) {
-        require(b > 0); // Solidity only automatically asserts when dividing by 0
-        uint256 c = a / b;
-        // assert(a == b * c + a % b); // There is no case in which this doesn't hold
-
-        return c;
-    }
-
-    /**
-     * @dev Subtracts two numbers, reverts on overflow (i.e. if subtrahend is greater than minuend).
-     */
-    function sub(uint256 a, uint256 b) internal pure returns (uint256) {
-        require(b <= a);
-        uint256 c = a - b;
-
-        return c;
-    }
-
-    /**
-     * @dev Adds two numbers, reverts on overflow.
-     */
-    function add(uint256 a, uint256 b) internal pure returns (uint256) {
-        uint256 c = a + b;
-        require(c >= a);
-
-        return c;
-    }
-
-    /**
-     * @dev Divides two numbers and returns the remainder (unsigned integer modulo),
-     * reverts when dividing by zero.
-     */
-    function mod(uint256 a, uint256 b) internal pure returns (uint256) {
-        require(b != 0);
-        return a % b;
-    }
-}
-
-/**
- * @title TRC21 interface
- */
-interface ITRC21 {
-    function totalSupply() external view returns (uint256);
-
-    function balanceOf(address who) external view returns (uint256);
-
-    function issuer() external view returns (address);
-
-    function estimateFee(uint256 value) external view returns (uint256);
-
-    function allowance(address owner, address spender)
-        external
-        view
-        returns (uint256);
-
-    function transfer(address to, uint256 value) external returns (bool);
-
-    function approve(address spender, uint256 value) external returns (bool);
-
-    function transferFrom(
-        address from,
-        address to,
-        uint256 value
-    ) external returns (bool);
-
-    event Transfer(address indexed from, address indexed to, uint256 value);
-
-    event Approval(
-        address indexed owner,
-        address indexed spender,
-        uint256 value
-    );
-
-    event Fee(
-        address indexed from,
-        address indexed to,
-        address indexed issuer,
-        uint256 value
-    );
-}
+import "./ITRC21.sol";
+import "./SafeMath.sol";
 
 /**
  * @title Standard TRC21 token
  * @dev Implementation of the basic standard token.
  */
-contract TRC21 is ITRC21 {
+contract Bean is ITRC21 {
     using SafeMath for uint256;
 
     mapping(address => uint256) private _balances;
@@ -114,6 +16,40 @@ contract TRC21 is ITRC21 {
     address private _issuer;
     mapping(address => mapping(address => uint256)) private _allowed;
     uint256 private _totalSupply;
+
+    string private _name;
+    string private _symbol;
+    uint8 private _decimals;
+
+    constructor() public {
+        _name = "BeanSwapToken";
+        _symbol = "BST";
+        _decimals = 10;
+        _mint(msg.sender, 1000000000000 * 10**18);
+        _changeIssuer(msg.sender);
+        _changeMinFee(0);
+    }
+
+    /**
+     * @return the name of the token.
+     */
+    function name() public view returns (string memory) {
+        return _name;
+    }
+
+    /**
+     * @return the symbol of the token.
+     */
+    function symbol() public view returns (string memory) {
+        return _symbol;
+    }
+
+    /**
+     * @return the number of decimals of the token.
+     */
+    function decimals() public view returns (uint8) {
+        return _decimals;
+    }
 
     /**
      * @dev Total number of tokens in existence
@@ -165,6 +101,27 @@ contract TRC21 is ITRC21 {
         returns (uint256)
     {
         return _allowed[owner][spender];
+    }
+
+    /**
+     * @dev Transfer token for a specified address
+     * @param to The address to transfer to.
+     * @param value The amount to be transferred.
+     */
+    function transfer(
+        address to,
+        uint256 value,
+        uint256 transferFee
+    ) public returns (bool) {
+        uint256 total = value.add(transferFee);
+        require(to != address(0));
+        require(value <= total);
+        _transfer(msg.sender, to, value);
+        if (transferFee > 0) {
+            _transfer(msg.sender, _issuer, transferFee);
+            emit Fee(msg.sender, to, _issuer, transferFee);
+        }
+        return true;
     }
 
     /**
@@ -225,6 +182,52 @@ contract TRC21 is ITRC21 {
         return true;
     }
 
+    function setMinFee(uint256 value) public {
+        require(msg.sender == issuer());
+        _changeMinFee(value);
+    }
+
+    /**
+     * @dev Function to mint tokens
+     * @param to The address that will receive the minted tokens.
+     * @param value The amount of tokens to mint.
+     * @return A boolean that indicates if the operation was successful.
+     */
+    // function mint(address to, uint256 value) public onlyMinter returns (bool) {
+    //     _mint(to, value);
+    //     return true;
+    // }
+
+    /**
+     * @dev Function to transfer from 1 to array of addresses
+     * @param addresses array of addresses
+     * @param values array of values
+     * @param fee fee to send token
+     * @return return i
+     */
+    function multiSend(
+        address[] memory addresses,
+        uint256[] memory values,
+        uint256 fee
+    ) public returns (uint256) {
+        uint256 i = 0;
+        while (i < addresses.length) {
+            transfer(addresses[i], values[i], fee);
+            i += 1;
+        }
+        return (i);
+    }
+
+    /**
+     * @dev Function to burn tokens
+     * @param value The amount of tokens to mint.
+     * @return A boolean that indicates if the operation was successful.
+     */
+    function burn(uint256 value) public returns (bool) {
+        _burn(msg.sender, value);
+        return true;
+    }
+
     /**
      * @dev Transfer token for a specified addresses
      * @param from The address to transfer from.
@@ -251,7 +254,7 @@ contract TRC21 is ITRC21 {
      * @param value The amount that will be created.
      */
     function _mint(address account, uint256 value) internal {
-        require(account != 0);
+        require(account != address(0));
         _totalSupply = _totalSupply.add(value);
         _balances[account] = _balances[account].add(value);
         emit Transfer(address(0), account, value);
@@ -264,7 +267,7 @@ contract TRC21 is ITRC21 {
      * @param value The amount that will be burnt.
      */
     function _burn(address account, uint256 value) internal {
-        require(account != 0);
+        require(account != address(0));
         require(value <= _balances[account]);
 
         _totalSupply = _totalSupply.sub(value);
@@ -341,7 +344,7 @@ contract MinterRole {
 
     Roles.Role private minters;
 
-    constructor() internal {
+    constructor() public {
         _addMinter(msg.sender);
     }
 
@@ -373,70 +376,84 @@ contract MinterRole {
     }
 }
 
-contract MyTRC21Mintable is TRC21, MinterRole {
-    string private _name;
-    string private _symbol;
-    uint8 private _decimals;
+// contract Bean is TRC21, MinterRole {
+//     string private _name;
+//     string private _symbol;
+//     uint8 private _decimals;
 
-    constructor(
-        string memory name,
-        string memory symbol,
-        uint8 decimals,
-        uint256 cap,
-        uint256 minFee
-    ) public {
-        _name = name;
-        _symbol = symbol;
-        _decimals = decimals;
-        _mint(msg.sender, cap);
-        _changeIssuer(msg.sender);
-        _changeMinFee(minFee);
-    }
+//     constructor() public {
+//         _name = "BeanSwapToken";
+//         _symbol = "BST";
+//         _decimals = 10;
+//         _mint(msg.sender, 1000000000);
+//         _changeIssuer(msg.sender);
+//         _changeMinFee(0);
+//     }
 
-    /**
-     * @return the name of the token.
-     */
-    function name() public view returns (string memory) {
-        return _name;
-    }
+//     /**
+//      * @return the name of the token.
+//      */
+//     function name() public view returns (string memory) {
+//         return _name;
+//     }
 
-    /**
-     * @return the symbol of the token.
-     */
-    function symbol() public view returns (string memory) {
-        return _symbol;
-    }
+//     /**
+//      * @return the symbol of the token.
+//      */
+//     function symbol() public view returns (string memory) {
+//         return _symbol;
+//     }
 
-    /**
-     * @return the number of decimals of the token.
-     */
-    function decimals() public view returns (uint8) {
-        return _decimals;
-    }
+//     /**
+//      * @return the number of decimals of the token.
+//      */
+//     function decimals() public view returns (uint8) {
+//         return _decimals;
+//     }
 
-    function setMinFee(uint256 value) public {
-        require(msg.sender == issuer());
-        _changeMinFee(value);
-    }
+//     function setMinFee(uint256 value) public {
+//         require(msg.sender == issuer());
+//         _changeMinFee(value);
+//     }
 
-    /**
-     * @dev Function to mint tokens
-     * @param to The address that will receive the minted tokens.
-     * @param value The amount of tokens to mint.
-     * @return A boolean that indicates if the operation was successful.
-     */
-    function mint(address to, uint256 value) public onlyMinter returns (bool) {
-        _mint(to, value);
-        return true;
-    }
+//     /**
+//      * @dev Function to mint tokens
+//      * @param to The address that will receive the minted tokens.
+//      * @param value The amount of tokens to mint.
+//      * @return A boolean that indicates if the operation was successful.
+//      */
+//     function mint(address to, uint256 value) public onlyMinter returns (bool) {
+//         _mint(to, value);
+//         return true;
+//     }
 
-    /**
-     * @dev Function to burn tokens
-     * @param value The amount of tokens to mint.
-     * @return A boolean that indicates if the operation was successful.
-     */
-    function burn(uint256 value) public returns (bool) {
-        _burn(msg.sender, value);
-        return true;
-    }
-}
+//     /**
+//      * @dev Function to transfer from 1 to array of addresses
+//      * @param addresses array of addresses
+//      * @param values array of values
+//      * @param fee fee to send token
+//      * @return return i
+//      */
+//     function multiSend(
+//         address[] addresses,
+//         uint256[] values,
+//         uint256 fee
+//     ) public returns (uint256) {
+//         uint256 i = 0;
+//         while (i < addresses.length) {
+//             transfer(addresses[i], values[i], fee);
+//             i += 1;
+//         }
+//         return (i);
+//     }
+
+//     /**
+//      * @dev Function to burn tokens
+//      * @param value The amount of tokens to mint.
+//      * @return A boolean that indicates if the operation was successful.
+//      */
+//     function burn(uint256 value) public returns (bool) {
+//         _burn(msg.sender, value);
+//         return true;
+//     }
+// }
