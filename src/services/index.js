@@ -1,10 +1,10 @@
 require('dotenv').config();
 import { ethers } from 'ethers';
-import EnvConfig from '../configs/env';
+import {EnvConfig} from '../configs/env';
 import { scanRoutes, SCAN_TESTNET_URL } from '../constants'
 const axios = require('axios');
 export const initProvider = () => {
-    return new ethers.providers.JsonRpcProvider(EnvConfig.RPC_ENPOINT);
+    return new ethers.providers.JsonRpcProvider(EnvConfig.RPC_ENPOINT_TOMO);
 }
 
 const provider = initProvider();
@@ -39,13 +39,13 @@ export const createRandomAccount = async () => {
  * @param {amount of bean to transfer} amount 
  * @param {who transfer } signer 
  */
-export const transfer = async (receiverAddress, amount, signer) => {
+export const transfer = async (receiverAddress, amount, transactionFee, signer) => {
     const options = {
         gasLimit: 150000,
         gasPrice: ethers.utils.parseUnits('14.0', 'gwei'),
     }
     const beanContract = await getTokenContract(signer);
-    await beanContract.transfer(receiverAddress, amount, options);
+    await beanContract.transferWithFee(receiverAddress, amount, transactionFee, options);
     const transactionId = await getLatestTransactionId(signer.address);
     return {
         sourceAddress: signer.address,
@@ -100,6 +100,10 @@ export const getLatestTransactionId = async (address) => {
     const latestTransactionId = transactions[0].hash;
     return latestTransactionId;
 }
+
+// transfer('0x2767B8c9838eDa3010B9e4310d2D1B63469e5F46', 10, 1, systemWallet)
+//     .then(data => console.log(data))
+//     .catch(error => console.log(error))
 
 
 

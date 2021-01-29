@@ -18,8 +18,8 @@ const convertBigNumberToNumber = (number) => {
     
 }
 
-const formatCurrency = (value, decimals = DECIMAL) => {
-    const formatted = ethers.utils.formatUnits(value, decimals) + ' BST';
+const formatCurrency = (value, decimals = DECIMAL, unit) => {
+    const formatted = ethers.utils.formatUnits(value, decimals) + ` ${unit}`;
     return formatted;
 }
 

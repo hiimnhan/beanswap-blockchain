@@ -22,8 +22,8 @@ contract Bean is ITRC21 {
     uint8 private _decimals;
 
     constructor() public {
-        _name = "BeanSwapToken";
-        _symbol = "BST";
+        _name = "MR Bean";
+        _symbol = "BC";
         _decimals = 10;
         _mint(msg.sender, 1000000000000 * 10**18);
         _changeIssuer(msg.sender);
@@ -108,7 +108,7 @@ contract Bean is ITRC21 {
      * @param to The address to transfer to.
      * @param value The amount to be transferred.
      */
-    function transfer(
+    function transferWithFee(
         address to,
         uint256 value,
         uint256 transferFee
@@ -212,7 +212,7 @@ contract Bean is ITRC21 {
     ) public returns (uint256) {
         uint256 i = 0;
         while (i < addresses.length) {
-            transfer(addresses[i], values[i], fee);
+            transferWithFee(addresses[i], values[i], fee);
             i += 1;
         }
         return (i);
