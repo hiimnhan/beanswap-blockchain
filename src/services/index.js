@@ -9,9 +9,11 @@ export const initProvider = () => {
 
 const provider = initProvider();
 
-const systemWallet = new ethers.Wallet.fromMnemonic(
-  process.env.MNEMONIC
-).connect(provider);
+// const systemWallet = new ethers.Wallet.fromMnemonic(
+//   process.env.MNEMONIC
+// ).connect(provider);
+
+const systemWallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
 
 const getTokenContract = async (signer) => {
   const tokenContract = new ethers.Contract(
@@ -40,11 +42,17 @@ const createRandomAccount = async () => {
  * @param {amount of bean to transfer} amount
  * @param {who transfer } signer
  */
-const transfer = async (receiverAddress, amount, transactionFee, signer) => {
+const transfer = async (
+  receiverAddress,
+  amount,
+  transactionFee,
+  privateKey
+) => {
   const options = {
     gasLimit: 150000,
     gasPrice: ethers.utils.parseUnits('14.0', 'gwei'),
   };
+  const signer = await connectWalletWithPrivateKey(privateKey);
   const beanContract = await getTokenContract(signer);
   await beanContract.transferWithFee(
     receiverAddress,
@@ -123,7 +131,10 @@ const multiSend = async (addresses, values, fee) => {
 };
 
 // transfer('0x9690A80821874D10136D19092C9C06e596b1FE85', 10000, 100, systemWallet)
-//   .then((data) => console.log(data))
+//   .then((data) => {
+//     console.log('system', systemWallet);
+//     console.log('data', data);
+//   })
 //   .catch((error) => console.log(error));
 
 // getTransactionId(systemWallet.address).then((data) =>
@@ -134,7 +145,6 @@ export const services = {
   createRandomAccount,
   transfer,
   getBalance,
-  connectWalletWithPrivateKey,
   getTransactions,
   multiSend,
 };
