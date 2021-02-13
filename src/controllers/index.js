@@ -1,7 +1,6 @@
 import { services } from '../services';
-import { ethers } from 'ethers';
-import { NotFound, BadRequest } from '../helpers/error';
-import { checkValidAddress } from '../utils';
+import { BadRequest } from '../helpers/error';
+import { checkValidAddress, convertBigNumberToNumber } from '../utils';
 const createAccount = async (req, res, next) => {
   try {
     const accountData = await services.createRandomAccount();
@@ -15,12 +14,12 @@ const createAccount = async (req, res, next) => {
 
 const transfer = async (req, res, next) => {
   try {
-    const { receiverAddress, amount, transactionFee, signer } = req.body;
+    const { receiverAddress, amount, transactionFee, privateKey } = req.body;
     const transferData = await services.transfer(
       receiverAddress,
       amount,
       transactionFee,
-      signer
+      privateKey
     );
     res.status(200).json({
       result: transferData,
@@ -36,23 +35,14 @@ const getBalance = async (req, res, next) => {
     if (!checkValidAddress(address)) {
       throw new BadRequest('Invalid address!');
     }
-    const balance = await services.getBalance(address);
+    const data = await services.getBalance(address);
+    console.log(data);
+    const balance = convertBigNumberToNumber(data);
     res.status(200).json({
-      result: balance,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-const connectWithPrivateKey = async (req, res, next) => {
-  try {
-    const { privateKey } = req.body;
-    if (privateKey.length < 64)
-      throw new BadRequest('Invalid format of private key!');
-    const signer = await services.connectWalletWithPrivateKey(privateKey);
-    res.status(200).json({
-      result: signer,
+      result: {
+        address,
+        balance,
+      },
     });
   } catch (error) {
     next(error);
@@ -61,11 +51,14 @@ const connectWithPrivateKey = async (req, res, next) => {
 
 const getTransactions = async (req, res, next) => {
   try {
-    const { address, limit } = req.params;
+    const { address } = req.params;
+    const { limit } = req.query;
     if (!checkValidAddress(address)) throw new BadRequest('Invalid address!');
     const transactions = await services.getTransactions(address, limit);
     res.status(200).json({
-      result: transactions,
+      result: {
+        transactions,
+      },
     });
   } catch (error) {
     next(error);
@@ -74,7 +67,6 @@ const getTransactions = async (req, res, next) => {
 
 export const controllers = {
   createAccount,
-  connectWithPrivateKey,
   transfer,
   getBalance,
   getTransactions,
