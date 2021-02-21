@@ -39,10 +39,10 @@ module.exports = (env, argv) => {
 				},
 			],
 		},
-		plugins: [
-			new webpack.DefinePlugin({
-				"process.env": JSON.stringify(dotenv.parsed)
-			}),
-		],
+		// plugins: [
+		// 	new webpack.DefinePlugin({
+		// 		"process.env": JSON.stringify(dotenv.parsed)
+		// 	}),
+		// ],
 	};
 };
