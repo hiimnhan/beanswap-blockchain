@@ -4,14 +4,14 @@ const express = require('express');
 const bodyParser = require('body-parser');
 
 const swaggerUi = require('swagger-ui-express');
-const { swaggerSpec } = require('./src/configs/swagger');
+const { swaggerSpec } = require('./configs/swagger');
 
-const Logger = require('./src/utils/logger');
-const { configs } = require('./src/configs');
+const Logger = require('./utils/logger');
+const { configs } = require('./configs');
 const boxen = require('boxen');
-const { handleErrors } = require('./src/helpers/error');
+const { handleErrors } = require('./helpers/error');
 
-import router from './src/routes';
+import router from './routes';
 
 const app = express();
 
