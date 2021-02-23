@@ -1,6 +1,6 @@
 const swaggerJSDoc = require('swagger-jsdoc');
 const options = {
-  swaggerDefinition: {
+  definition: {
     openapi: '3.0.0',
     info: {
       title: 'BS-Blockchain API',
@@ -11,14 +11,8 @@ const options = {
         url: 'https://spdx.org/licenses/MIT.html',
       },
     },
-    servers: [
-      {
-        url: 'http://localhost:5001',
-        description: 'local server',
-      },
-    ],
   },
-  apis: ['../routes/index.js'],
+  apis: ['./src/routes/index.js'],
 };
 
 export const swaggerSpec = swaggerJSDoc(options);

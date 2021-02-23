@@ -1,7 +1,7 @@
 export const DECIMAL = 10;
 export const apiRoutes = {
   TRANSFER_BEAN: '/transfer',
-  GET_BALANCE: '/balance/:address',
+  GET_BALANCE: '/balances/:address',
   CONNECT_PRIVATE_KEY: '/connection',
   SET_MIN_FEE: '/fee',
   CREATE_ACCOUNT: '/account',
