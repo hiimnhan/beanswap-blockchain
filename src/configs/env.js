@@ -1,5 +1,5 @@
 
-const BeanContract = require('../../build/contracts/Bean.json');
+const BeanContract = require('../Bean.json');
 const EnvConfig = {
     RPC_ENPOINT_TOMO: 'https://rpc.testnet.tomochain.com',
     RPC_ENPOINT_LOCAL: 'HTTP://127.0.0.1:7545',
