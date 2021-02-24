@@ -6,7 +6,7 @@ const bodyParser = require('body-parser');
 const swaggerUi = require('swagger-ui-express');
 const { swaggerSpec } = require('./configs/swagger');
 
-const Logger = require('./utils/logger');
+import Logger from './utils/logger'
 const { configs } = require('./configs');
 const boxen = require('boxen');
 const { handleErrors } = require('./helpers/error');

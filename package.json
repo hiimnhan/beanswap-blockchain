@@ -8,11 +8,12 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build:babel": "babel -d ./build ./src -s",
-    "build:webpack": "rm -rf dist && webpack --mode production",
-    "build": "rm -rf dist && webpack --mode production",
-    "dev": "nodemon --exec babel-node index.js",
-    "start": "node ./dist/server.js"
+    "clean": "rm -rf dist",
+    "build:babel": "npm run clean && babel src -d dist",
+    "build:webpack": "npm run clean && webpack --mode production",
+    "build": "npm run clean && npm run build:webpack",
+    "dev": "nodemon --exec babel-node src/index.js",
+    "start": "node dist/index.js"
   },
   "author": "nhanncv",
   "license": "ISC",
