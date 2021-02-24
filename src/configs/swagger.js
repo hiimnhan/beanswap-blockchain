@@ -12,7 +12,7 @@ const options = {
       },
     },
   },
-  apis: ['./src/routes/index.js'],
+  apis: ['./src/routes/index.js', './routes/index.js', './index.js'],
 };
 
 export const swaggerSpec = swaggerJSDoc(options);
