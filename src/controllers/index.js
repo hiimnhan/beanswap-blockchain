@@ -3,7 +3,7 @@ import { BadRequest } from '../helpers/error';
 import { checkValidAddress, convertBigNumberToNumber } from '../utils';
 const createAccount = async (req, res, next) => {
   try {
-    const accountData = await services.createRandomAccount();
+    const accountData = await services.createKeyStoreJson();
     res.status(200).json({
       result: accountData,
     });
@@ -14,12 +14,14 @@ const createAccount = async (req, res, next) => {
 
 const transfer = async (req, res, next) => {
   try {
-    const { receiverAddress, amount, transactionFee, privateKey } = req.body;
+    const { receiverAddress, amount, transactionFee, keystore } = req.body;
+    const { password } = req.headers;
     const transferData = await services.transfer(
       receiverAddress,
       amount,
       transactionFee,
-      privateKey
+      keystore,
+      password
     );
     res.status(200).json({
       result: transferData,

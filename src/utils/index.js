@@ -1,4 +1,4 @@
-import { ethers, BigNumber } from 'ethers';
+import { ethers, BigNumber, utils } from 'ethers';
 import { DECIMAL } from '../constants';
 
 const calculateMinFee = (total, percent = 10) => {
@@ -26,10 +26,20 @@ const checkValidAddress = (address) => {
   return ethers.utils.isAddress(address);
 };
 
+const encryptData = (value) => {
+  let encrypted;
+  if (typeof value === 'string') {
+    encrypted = ethers.utils.keccak256(utils.toUtf8Bytes(value));
+  }
+  encrypted = ethers.utils.keccak256(value);
+  return encrypted;
+};
+
 export {
   calculateMinFee,
   parseAmount,
   convertBigNumberToNumber,
   formatCurrency,
   checkValidAddress,
+  encryptData,
 };
