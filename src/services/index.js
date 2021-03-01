@@ -2,16 +2,13 @@ require('dotenv').config();
 import { ethers } from 'ethers';
 import { EnvConfig } from '../configs/env';
 import { scanRoutes, SCAN_TESTNET_URL } from '../constants';
+import { encryptData } from '../utils';
 const axios = require('axios');
 export const initProvider = () => {
   return new ethers.providers.JsonRpcProvider(EnvConfig.RPC_ENPOINT_TOMO);
 };
 
 const provider = initProvider();
-
-// const systemWallet = new ethers.Wallet.fromMnemonic(
-//   process.env.MNEMONIC
-// ).connect(provider);
 
 const systemWallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
 
@@ -25,15 +22,30 @@ const getTokenContract = async (signer) => {
 };
 
 /**
- * @dev create random wallet
- * @returns address, mnemonic, privateKey of wallet
+ * @dev create keystore json
  */
-const createRandomAccount = async () => {
+const createKeyStoreJson = async () => {
   const wallet = await ethers.Wallet.createRandom().connect(provider);
+  const { privateKey } = wallet;
+  const encryptedKey = encryptData(privateKey);
+  const keystoreJson = await wallet.encrypt(encryptedKey, {
+    scrypt: {
+      N: 2 ** 16,
+    },
+  });
   return {
     address: wallet.address,
-    privateKey: wallet.privateKey,
+    keystore: keystoreJson,
+    encryptKey: encryptedKey,
   };
+};
+
+const readKeyStoreJson = async (json, password) => {
+  const wallet = await (
+    await ethers.Wallet.fromEncryptedJson(json, password)
+  ).connect(provider);
+  console.log('wallet', wallet);
+  return wallet;
 };
 
 /**
@@ -46,13 +58,14 @@ const transfer = async (
   receiverAddress,
   amount,
   transactionFee,
-  privateKey
+  keystore,
+  password
 ) => {
   const options = {
     gasLimit: 150000,
     gasPrice: ethers.utils.parseUnits('14.0', 'gwei'),
   };
-  const signer = await connectWalletWithPrivateKey(privateKey);
+  const signer = await readKeyStoreJson(keystore, password);
   const beanContract = await getTokenContract(signer);
   await beanContract.transferWithFee(
     receiverAddress,
@@ -80,32 +93,6 @@ const getBalance = async (address) => {
 };
 
 /**
- * @dev adjust min fee
- * @param {new min fee} newMinFee
- */
-const setNewMinFee = async (newMinFee) => {
-  const beanContract = await getTokenContract(systemWallet);
-  await beanContract.setMinFee(newMinFee);
-};
-
-/**
- * @dev connect wallet with mnemonic
- * @param {12 seeds phrase} mnemonic
- */
-const connectWalletWithMnemonic = async (mnemonic) => {
-  await ethers.Wallet.fromMnemonic(mnemonic).connect(provider);
-};
-
-/**
- * @dev connect wallet by privateKey
- * @param {private key of wallet } privateKey
- */
-const connectWalletWithPrivateKey = async (privateKey) => {
-  const signer = await new ethers.Wallet(privateKey, provider);
-  return signer;
-};
-
-/**
  *
  * @param {address to get txId} address
  */
@@ -130,19 +117,8 @@ const multiSend = async (addresses, values, fee) => {
   return count;
 };
 
-// transfer('0x9690A80821874D10136D19092C9C06e596b1FE85', 10000, 100, systemWallet)
-//   .then((data) => {
-//     console.log('system', systemWallet);
-//     console.log('data', data);
-//   })
-//   .catch((error) => console.log(error));
-
-// getTransactionId(systemWallet.address).then((data) =>
-//   console.log('tx: ', data)
-// );
-
 export const services = {
-  createRandomAccount,
+  createKeyStoreJson,
   transfer,
   getBalance,
   getTransactions,
