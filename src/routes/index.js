@@ -23,13 +23,17 @@ const router = express.Router();
  *                       address:
  *                         type: string
  *                         description: new address
- *                       privateKey:
+ *                       keystore:
  *                         type: string
- *                         description: privateKey of new address
+ *                         description: keystore of new address
+ *                       encryptKey:
+ *                         type: string
+ *                         description: password for keystore
  *                 example:
  *                   result:
  *                     address: '0xFcE5CDeF114E7f14e1FABDa9dCfb88baEa2c9345'
- *                     privateKey: '0x4f1bfd87c17ef1341d52a9f659130725e165095b85bdf802a14bb5c0dee55ff8'
+ *                     keystore: "{\"address\":\"a34996c8213fde3db7224964b2c44f14fb63744c\",\"id\":\"398ccfe5-9436-4f0e-b0ec-4ce6681af75b\",\"version\":3,\"Crypto\":{\"cipher\":\"aes-128-ctr\",\"cipherparams\":{\"iv\":\"de573ca65e4c0478c5e83626cd980bc3\"},\"ciphertext\":\"d45064227d6b0f96f5e77261e18dc47219b319880cc39848016028c2559191f2\",\"kdf\":\"scrypt\",\"kdfparams\":{\"salt\":\"363a697dfb76dcc9151306e8082ee44dab65a8991ab96cd80ad2580f5d59ac89\",\"n\":65536,\"dklen\":32,\"p\":1,\"r\":8},\"mac\":\"aad6a5425e6f616f1f7b9bb84f7cb6b3cdf9083861150f6619db5232e84a0e7b\"},\"x-ethers\":{\"client\":\"ethers.js\",\"gethFilename\":\"UTC--2021-03-01T16-07-33.0Z--a34996c8213fde3db7224964b2c44f14fb63744c\",\"mnemonicCounter\":\"86562309d89ab6ee255009207750608d\",\"mnemonicCiphertext\":\"6ff86abd77008b15728ea50a520aa623\",\"path\":\"m/44'/60'/0'/0/0\",\"locale\":\"en\",\"version\":\"0.1\"}}"
+ *                     encryptKey: '0x13356441de3b4ea936f500a3bd88cdbe2231274add00ff079ad5f3fdc2bee918'
  */
 router.post(apiRoutes.CREATE_ACCOUNT, controllers.createAccount);
 
@@ -110,6 +114,12 @@ router.get(apiRoutes.GET_TXS, controllers.getTransactions);
  * /api/transfer:
  *   post:
  *     summary: transfer bean from one to another address
+ *     parameters:
+ *       - in: header
+ *         name: password
+ *         schema:
+ *           type: string
+ *         required: true
  *     requestBody:
  *       required: true
  *       content:
@@ -126,14 +136,14 @@ router.get(apiRoutes.GET_TXS, controllers.getTransactions);
  *               transactionFee:
  *                 type: integer
  *                 description: txs fee
- *               privateKey:
+ *               keystore:
  *                 type: string
- *                 description: privateKey of sender address
+ *                 description: keystore of address
  *           example:
  *             receiverAddress: '0x2767B8c9838eDa3010B9e4310d2D1B63469e5F46'
  *             amount: 10
  *             transactionFee: 1
- *             privateKey: '1cb10cefee8ef51c634fe4a0088334ee10094b11387754fa574c5007814c0edf'
+ *             keystore: "{\"address\":\"a34996c8213fde3db7224964b2c44f14fb63744c\",\"id\":\"398ccfe5-9436-4f0e-b0ec-4ce6681af75b\",\"version\":3,\"Crypto\":{\"cipher\":\"aes-128-ctr\",\"cipherparams\":{\"iv\":\"de573ca65e4c0478c5e83626cd980bc3\"},\"ciphertext\":\"d45064227d6b0f96f5e77261e18dc47219b319880cc39848016028c2559191f2\",\"kdf\":\"scrypt\",\"kdfparams\":{\"salt\":\"363a697dfb76dcc9151306e8082ee44dab65a8991ab96cd80ad2580f5d59ac89\",\"n\":65536,\"dklen\":32,\"p\":1,\"r\":8},\"mac\":\"aad6a5425e6f616f1f7b9bb84f7cb6b3cdf9083861150f6619db5232e84a0e7b\"},\"x-ethers\":{\"client\":\"ethers.js\",\"gethFilename\":\"UTC--2021-03-01T16-07-33.0Z--a34996c8213fde3db7224964b2c44f14fb63744c\",\"mnemonicCounter\":\"86562309d89ab6ee255009207750608d\",\"mnemonicCiphertext\":\"6ff86abd77008b15728ea50a520aa623\",\"path\":\"m/44'/60'/0'/0/0\",\"locale\":\"en\",\"version\":\"0.1\"}}"
  *     responses:
  *       200:
  *         content:

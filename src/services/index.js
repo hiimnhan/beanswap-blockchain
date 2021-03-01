@@ -27,7 +27,6 @@ const getTokenContract = async (signer) => {
 const createKeyStoreJson = async () => {
   const wallet = await ethers.Wallet.createRandom().connect(provider);
   const { privateKey } = wallet;
-  console.log('key', privateKey);
   const encryptedKey = encryptData(privateKey);
   const keystoreJson = await wallet.encrypt(encryptedKey, {
     scrypt: {
