@@ -3,6 +3,7 @@ import { ethers } from 'ethers';
 import { EnvConfig } from '../configs/env';
 import { scanRoutes, SCAN_TESTNET_URL } from '../constants';
 import { encryptData } from '../utils';
+import * as moment from 'moment';
 const axios = require('axios');
 export const initProvider = () => {
   return new ethers.providers.JsonRpcProvider(EnvConfig.RPC_ENPOINT_TOMO);
@@ -26,6 +27,15 @@ const getTokenContract = async (signer) => {
  */
 const createKeyStoreJson = async () => {
   const wallet = await ethers.Wallet.createRandom().connect(provider);
+  const { encryptedKey, keystoreJson } = await generateKeyStoreJson(wallet);
+  return {
+    address: wallet.address,
+    keystore: keystoreJson,
+    encryptKey: encryptedKey,
+  };
+};
+
+const generateKeyStoreJson = async (wallet) => {
   const { privateKey } = wallet;
   const encryptedKey = encryptData(privateKey);
   const keystoreJson = await wallet.encrypt(encryptedKey, {
@@ -34,9 +44,8 @@ const createKeyStoreJson = async () => {
     },
   });
   return {
-    address: wallet.address,
-    keystore: keystoreJson,
-    encryptKey: encryptedKey,
+    keystoreJson,
+    encryptedKey,
   };
 };
 
@@ -44,7 +53,6 @@ const readKeyStoreJson = async (json, password) => {
   const wallet = await (
     await ethers.Wallet.fromEncryptedJson(json, password)
   ).connect(provider);
-  console.log('wallet', wallet);
   return wallet;
 };
 
@@ -73,11 +81,14 @@ const transfer = async (
     transactionFee,
     options
   );
-  const txTransferHash = await getTransactionHash(signer.address);
+  const txDetail = await getTransactionDetailByAddress(signer.address);
+  console.log(txDetail);
   return {
     sourceAddress: signer.address,
     destAddress: receiverAddress,
-    txTransferHash,
+    txTransferHash: txDetail.hash,
+    txTimeStamp: moment.utc(txDetail.timestamp),
+    txStatus: txDetail.status,
     amount,
   };
 };
@@ -96,13 +107,13 @@ const getBalance = async (address) => {
  *
  * @param {address to get txId} address
  */
-const getTransactionHash = async (address) => {
-  const transaction = await getTransactions(address, 1);
-  const txTransferHash = transaction[0].hash;
-  return txTransferHash;
+const getTransactionDetailByAddress = async (address) => {
+  const transaction = await getTransactionsByAddress(address, 1);
+  const txDetail = transaction[0];
+  return txDetail;
 };
 
-const getTransactions = async (address, limit) => {
+const getTransactionsByAddress = async (address, limit = 20) => {
   const transactions = await axios
     .get(
       `${SCAN_TESTNET_URL}${scanRoutes.GET_TRANSACTIONS}${address}?limit=${limit}`
@@ -121,6 +132,6 @@ export const services = {
   createKeyStoreJson,
   transfer,
   getBalance,
-  getTransactions,
+  getTransactionsByAddress,
   multiSend,
 };
