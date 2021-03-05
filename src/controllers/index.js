@@ -51,12 +51,15 @@ const getBalance = async (req, res, next) => {
   }
 };
 
-const getTransactions = async (req, res, next) => {
+const getTransactionsByAddress = async (req, res, next) => {
   try {
     const { address } = req.params;
-    const { limit } = req.query;
+    const { limit } = req.body;
     if (!checkValidAddress(address)) throw new BadRequest('Invalid address!');
-    const transactions = await services.getTransactions(address, limit);
+    const transactions = await services.getTransactionsByAddress(
+      address,
+      limit
+    );
     res.status(200).json({
       result: {
         transactions,
@@ -71,5 +74,5 @@ export const controllers = {
   createAccount,
   transfer,
   getBalance,
-  getTransactions,
+  getTransactionsByAddress,
 };

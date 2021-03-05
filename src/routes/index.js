@@ -9,7 +9,7 @@ const router = express.Router();
  * @swagger
  *   /api/account:
  *     post:
- *       summary: create new wallet
+ *       summary: Create new wallet
  *       responses:
  *         200:
  *           content:
@@ -41,7 +41,7 @@ router.post(apiRoutes.CREATE_ACCOUNT, controllers.createAccount);
  * @swagger
  *   /api/balances/{address}:
  *     get:
- *       summary: get balance of an address
+ *       summary: Get balance of an address
  *       parameters:
  *         - in: path
  *           name: address
@@ -73,9 +73,9 @@ router.get(apiRoutes.GET_BALANCE, controllers.getBalance);
 
 /**
  * @swagger
- *   /api/transactions/{address}?limit:
+ *   /api/transactions/{address}:
  *     get:
- *       summary: get transactions of an address with limit chosen
+ *       summary: Get transactions of an address with limit chosen
  *       parameters:
  *         - in: path
  *           name: address
@@ -83,11 +83,16 @@ router.get(apiRoutes.GET_BALANCE, controllers.getBalance);
  *             type: string
  *           required: true
  *           description: address to get balance
- *         - in: query
- *           name: limit
- *           schema:
- *             type: integer
- *           description: number of txs to get
+ *       requestBody:
+ *         required: false
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 limit:
+ *                   type: number
+ *                   description: number of txs to get
  *       responses:
  *         200:
  *           content:
@@ -107,7 +112,7 @@ router.get(apiRoutes.GET_BALANCE, controllers.getBalance);
  *                             type: object
  *
  */
-router.get(apiRoutes.GET_TXS, controllers.getTransactions);
+router.get(apiRoutes.GET_TXS, controllers.getTransactionsByAddress);
 
 /**
  * @swagger
@@ -163,6 +168,12 @@ router.get(apiRoutes.GET_TXS, controllers.getTransactions);
  *                     txTransferHash:
  *                       type: string
  *                       example: '0xcd7369ae5d2b033463c92c7ac03bd9a5f9294cda110feae1bd039ef8c63cbf2c'
+ *                     txTimestamp:
+ *                       type: string
+ *                       example: '2021-03-05T14:59:41.000Z'
+ *                     txStatus:
+ *                       type: boolean
+ *                       example: true
  *                     amount:
  *                       type: integer
  *                       example: 10
