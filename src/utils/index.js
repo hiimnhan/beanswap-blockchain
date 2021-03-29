@@ -1,5 +1,7 @@
+require('dotenv').config();
 import { ethers, BigNumber, utils } from 'ethers';
 import { DECIMAL } from '../constants';
+const CryptoJS = require('crypto-js');
 
 const calculateMinFee = (total, percent = 10) => {
   const minFee = Math.round((total * percent) / 100);
@@ -35,6 +37,19 @@ const encryptData = (value) => {
   return encrypted;
 };
 
+const encryptPrivateKey = (privateKey) => {
+  const SECRET_KEY = process.env.SECRET_KEY;
+  const cipherText = CryptoJS.AES.encrypt(privateKey, SECRET_KEY).toString();
+  return cipherText;
+};
+
+const decryptPrivateKey = (cipherText) => {
+  const SECRET_KEY = process.env.SECRET_KEY;
+  const bytes = CryptoJS.AES.decrypt(cipherText, SECRET_KEY);
+  const originalText = bytes.toString(CryptoJS.enc.Utf8);
+  return originalText;
+};
+
 export {
   calculateMinFee,
   parseAmount,
@@ -42,4 +57,6 @@ export {
   formatCurrency,
   checkValidAddress,
   encryptData,
+  encryptPrivateKey,
+  decryptPrivateKey,
 };
