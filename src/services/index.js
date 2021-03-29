@@ -2,7 +2,7 @@ require('dotenv').config();
 import { ethers } from 'ethers';
 import { EnvConfig } from '../configs/env';
 import { scanRoutes, SCAN_TESTNET_URL } from '../constants';
-import { encryptData } from '../utils';
+import { encryptData, encryptPrivateKey, decryptPrivateKey } from '../utils';
 import * as moment from 'moment';
 const axios = require('axios');
 export const initProvider = () => {
@@ -23,40 +23,6 @@ const getTokenContract = async (signer) => {
 };
 
 /**
- * @dev create keystore json
- */
-const createKeyStoreJson = async () => {
-  const wallet = await ethers.Wallet.createRandom().connect(provider);
-  const { encryptedKey, keystoreJson } = await generateKeyStoreJson(wallet);
-  return {
-    address: wallet.address,
-    keystore: keystoreJson,
-    encryptKey: encryptedKey,
-  };
-};
-
-const generateKeyStoreJson = async (wallet) => {
-  const { privateKey } = wallet;
-  const encryptedKey = encryptData(privateKey);
-  const keystoreJson = await wallet.encrypt(encryptedKey, {
-    scrypt: {
-      N: 2 ** 16,
-    },
-  });
-  return {
-    keystoreJson,
-    encryptedKey,
-  };
-};
-
-const readKeyStoreJson = async (json, password) => {
-  const wallet = await (
-    await ethers.Wallet.fromEncryptedJson(json, password)
-  ).connect(provider);
-  return wallet;
-};
-
-/**
  * @dev transfer bean
  * @param {receiver address} receiverAddress
  * @param {amount of bean to transfer} amount
@@ -66,14 +32,16 @@ const transfer = async (
   receiverAddress,
   amount,
   transactionFee,
-  keystore,
-  password
+  walletPrivateKey
 ) => {
   const options = {
     gasLimit: 150000,
     gasPrice: ethers.utils.parseUnits('14.0', 'gwei'),
   };
-  const signer = await readKeyStoreJson(keystore, password);
+  //const signer = await readKeyStoreJson(keystore, password);
+  const SECRET_KEY = process.env.SECRET_KEY;
+  const originalKey = decryptPrivateKey(walletPrivateKey, SECRET_KEY);
+  const signer = await new ethers.Wallet(originalKey, provider);
   const beanContract = await getTokenContract(signer);
   await beanContract.transferWithFee(
     receiverAddress,
@@ -81,6 +49,7 @@ const transfer = async (
     transactionFee,
     options
   );
+  console.log('signer.address', signer.address);
   const txDetail = await getTransactionDetailByAddress(signer.address);
   console.log(txDetail);
   return {
@@ -128,10 +97,23 @@ const multiSend = async (addresses, values, fee) => {
   return count;
 };
 
+const createRandom = async () => {
+  const newWallet = await ethers.Wallet.createRandom().connect(provider);
+  const { privateKey, address } = newWallet;
+
+  const cipherText = encryptPrivateKey(privateKey);
+
+  return {
+    walletAddress: address,
+    walletPrivateKey: cipherText,
+  };
+};
+
 export const services = {
-  createKeyStoreJson,
+  //createKeyStoreJson,
   transfer,
   getBalance,
   getTransactionsByAddress,
   multiSend,
+  createRandom,
 };
