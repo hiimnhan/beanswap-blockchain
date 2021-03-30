@@ -14,12 +14,12 @@ const createWallet = async (req, res, next) => {
 const createTransaction = async (req, res, next) => {
   try {
     const { receiverAddress, amount, transactionFee } = req.body;
-    const { encryptedKey } = req.headers;
+    const { encryptedkey } = req.headers;
     const transferData = await services.transfer(
       receiverAddress,
       amount,
       transactionFee,
-      encryptedKey
+      encryptedkey
     );
     res.status(201).json(transferData);
   } catch (error) {

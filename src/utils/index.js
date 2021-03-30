@@ -39,14 +39,17 @@ const encryptData = (value) => {
 
 const encryptPrivateKey = (privateKey) => {
   const SECRET_KEY = process.env.SECRET_KEY;
-  const cipherText = CryptoJS.AES.encrypt(privateKey, SECRET_KEY).toString();
+  const cipherText = CryptoJS.AES.encrypt(
+    JSON.stringify({ privateKey }),
+    SECRET_KEY
+  ).toString();
   return cipherText;
 };
 
-const decryptPrivateKey = (cipherText) => {
+const decryptPrivateKey = async (cipherText) => {
   const SECRET_KEY = process.env.SECRET_KEY;
-  const bytes = CryptoJS.AES.decrypt(cipherText, SECRET_KEY);
-  const originalText = bytes.toString(CryptoJS.enc.Utf8);
+  const bytes = await CryptoJS.AES.decrypt(cipherText, SECRET_KEY);
+  const originalText = await bytes.toString(CryptoJS.enc.Utf8);
   return originalText;
 };
 
