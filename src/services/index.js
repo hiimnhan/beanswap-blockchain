@@ -5,6 +5,7 @@ import { scanRoutes, SCAN_TESTNET_URL } from '../constants';
 import { encryptData, encryptPrivateKey, decryptPrivateKey } from '../utils';
 import * as moment from 'moment';
 const axios = require('axios');
+
 export const initProvider = () => {
   return new ethers.providers.JsonRpcProvider(EnvConfig.RPC_ENPOINT_TOMO);
 };
@@ -49,9 +50,7 @@ const transfer = async (
     transactionFee,
     options
   );
-  console.log('signer.address', signer.address);
   const txDetail = await getTransactionDetailByAddress(signer.address);
-  console.log(txDetail);
   return {
     sourceAddress: signer.address,
     destAddress: receiverAddress,
