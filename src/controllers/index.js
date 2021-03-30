@@ -5,7 +5,7 @@ import { checkValidAddress, convertBigNumberToNumber } from '../utils';
 const createWallet = async (req, res, next) => {
 	try {
 		const walletData = await services.createRandom();
-		res.status(200).json(walletData);
+		res.status(201).json(walletData);
 	} catch (error) {
 		next(error);
 	}
@@ -21,7 +21,7 @@ const createTransaction = async (req, res, next) => {
 			transactionFee,
 			encryptedKey
 		);
-		res.status(200).json(transferData);
+		res.status(201).json(transferData);
 	} catch (error) {
 		next(error);
 	}
