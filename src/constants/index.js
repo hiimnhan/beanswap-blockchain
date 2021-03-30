@@ -1,11 +1,11 @@
 export const DECIMAL = 10;
 export const apiRoutes = {
-  TRANSFER_BEAN: '/transfer',
+  CREATE_TRANSACTION: '/transactions',
   GET_BALANCE: '/balances/:address',
   CONNECT_PRIVATE_KEY: '/connection',
   SET_MIN_FEE: '/fee',
-  CREATE_ACCOUNT: '/account',
-  GET_TXS: '/transactions/:address',
+  CREATE_WALLET: '/wallets',
+  GET_TRANSACTIONS: '/transactions/:address',
 };
 export const scanRoutes = {
   GET_TRANSACTIONS: 'api/txs/listByAccount/',

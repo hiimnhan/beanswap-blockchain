@@ -32,7 +32,7 @@ const transfer = async (
   receiverAddress,
   amount,
   transactionFee,
-  walletPrivateKey
+  encryptedKey
 ) => {
   const options = {
     gasLimit: 150000,
@@ -40,7 +40,7 @@ const transfer = async (
   };
   //const signer = await readKeyStoreJson(keystore, password);
   const SECRET_KEY = process.env.SECRET_KEY;
-  const originalKey = decryptPrivateKey(walletPrivateKey, SECRET_KEY);
+  const originalKey = decryptPrivateKey(encryptedKey, SECRET_KEY);
   const signer = await new ethers.Wallet(originalKey, provider);
   const beanContract = await getTokenContract(signer);
   await beanContract.transferWithFee(
@@ -101,11 +101,11 @@ const createRandom = async () => {
   const newWallet = await ethers.Wallet.createRandom().connect(provider);
   const { privateKey, address } = newWallet;
 
-  const cipherText = encryptPrivateKey(privateKey);
+  const encryptedKey = encryptPrivateKey(privateKey);
 
   return {
-    walletAddress: address,
-    walletPrivateKey: cipherText,
+    address: address,
+    encryptedKey: encryptedKey,
   };
 };
 
