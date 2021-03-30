@@ -11,7 +11,7 @@ const router = express.Router();
  *     post:
  *       summary: Create new wallet
  *       responses:
- *         200:
+ *         201:
  *           content:
  *             application/json:
  *               schema:
@@ -123,7 +123,7 @@ router.get(apiRoutes.GET_TRANSACTIONS, controllers.getTransactionsByAddress);
  *             amount: 10
  *             transactionFee: 1
  *     responses:
- *       200:
+ *       201:
  *         content:
  *           application/json:
  *             schema:
