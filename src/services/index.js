@@ -4,6 +4,7 @@ import { EnvConfig } from '../configs/env';
 import { scanRoutes, SCAN_TESTNET_URL } from '../constants';
 import { encryptData, encryptPrivateKey, decryptPrivateKey } from '../utils';
 import * as moment from 'moment';
+import { BadRequest } from '../helpers/error';
 const axios = require('axios');
 
 export const initProvider = () => {
@@ -44,7 +45,9 @@ const transfer = async (
   const { privateKey } = JSON.parse(originalKey);
 
   const signer = await new ethers.Wallet(privateKey, provider);
-
+  if (receiverAddress === signer.address) {
+    throw new BadRequest('Cannot transfer to same address');
+  }
   const beanContract = await getTokenContract(signer);
 
   await beanContract.transferWithFee(
