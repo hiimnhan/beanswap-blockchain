@@ -39,11 +39,14 @@ const transfer = async (
     gasLimit: 150000,
     gasPrice: ethers.utils.parseUnits('14.0', 'gwei'),
   };
-  //const signer = await readKeyStoreJson(keystore, password);
-  const SECRET_KEY = process.env.SECRET_KEY;
-  const originalKey = decryptPrivateKey(encryptedKey, SECRET_KEY);
-  const signer = await new ethers.Wallet(originalKey, provider);
+
+  const originalKey = await decryptPrivateKey(encryptedKey);
+  const { privateKey } = JSON.parse(originalKey);
+
+  const signer = await new ethers.Wallet(privateKey, provider);
+
   const beanContract = await getTokenContract(signer);
+
   await beanContract.transferWithFee(
     receiverAddress,
     amount,
@@ -51,12 +54,13 @@ const transfer = async (
     options
   );
   const txDetail = await getTransactionDetailByAddress(signer.address);
+  console.log('txDetail', txDetail);
   return {
     sourceAddress: signer.address,
     destAddress: receiverAddress,
-    txTransferHash: txDetail.hash,
-    txTimeStamp: moment.utc(txDetail.timestamp),
-    txStatus: txDetail.status,
+    txTransferHash: txDetail?.hash,
+    txTimeStamp: moment.utc(txDetail?.timestamp),
+    txStatus: txDetail?.status,
     amount,
   };
 };
@@ -77,6 +81,7 @@ const getBalance = async (address) => {
  */
 const getTransactionDetailByAddress = async (address) => {
   const transaction = await getTransactionsByAddress(address, 1);
+  console.log('transaction', transaction);
   const txDetail = transaction[0];
   return txDetail;
 };
@@ -86,7 +91,8 @@ const getTransactionsByAddress = async (address, limit = 20) => {
     .get(
       `${SCAN_TESTNET_URL}${scanRoutes.GET_TRANSACTIONS}${address}?limit=${limit}`
     )
-    .then((res) => res.data.items);
+    .then((res) => res.data.items)
+    .catch((error) => console.log(error));
   return transactions;
 };
 
@@ -99,7 +105,6 @@ const multiSend = async (addresses, values, fee) => {
 const createRandom = async () => {
   const newWallet = await ethers.Wallet.createRandom().connect(provider);
   const { privateKey, address } = newWallet;
-
   const encryptedKey = encryptPrivateKey(privateKey);
 
   return {
@@ -109,7 +114,6 @@ const createRandom = async () => {
 };
 
 export const services = {
-  //createKeyStoreJson,
   transfer,
   getBalance,
   getTransactionsByAddress,
