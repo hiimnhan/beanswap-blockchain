@@ -116,6 +116,8 @@ const createRandom = async () => {
   };
 };
 
+console.log('key', encryptPrivateKey(process.env.PRIVATE_KEY));
+
 export const services = {
   transfer,
   getBalance,
