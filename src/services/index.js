@@ -59,6 +59,7 @@ const transfer = async (
       options
     );
   }
+  const total = amount + transactionFee;
   const txDetail = await getTransactionDetailByAddress(signer.address);
   console.log('txDetail', txDetail);
   return {
@@ -67,7 +68,7 @@ const transfer = async (
     txTransferHash: txDetail?.hash,
     txTimeStamp: moment.utc(txDetail?.timestamp),
     txStatus: txDetail?.status,
-    amount,
+    amount: total,
   };
 };
 
