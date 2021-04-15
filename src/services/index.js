@@ -49,13 +49,16 @@ const transfer = async (
     throw new BadRequest('Cannot transfer to same address');
   }
   const beanContract = await getTokenContract(signer);
-
-  await beanContract.transferWithFee(
-    receiverAddress,
-    amount,
-    transactionFee,
-    options
-  );
+  if (transactionFee === 0) {
+    await beanContract.transfer(receiverAddress, amount, options);
+  } else {
+    await beanContract.transferWithFee(
+      receiverAddress,
+      amount,
+      transactionFee,
+      options
+    );
+  }
   const txDetail = await getTransactionDetailByAddress(signer.address);
   console.log('txDetail', txDetail);
   return {
@@ -99,10 +102,19 @@ const getTransactionsByAddress = async (address, limit = 20) => {
   return transactions;
 };
 
-const multiSend = async (addresses, values, fee) => {
-  const beanContract = await getTokenContract(systemWallet);
-  const count = await beanContract.multiSend(addresses, values, fee);
-  return count;
+const multiSend = async (addresses, values, fee, encryptedKey) => {
+  const options = {
+    gasLimit: 150000,
+    gasPrice: ethers.utils.parseUnits('14.0', 'gwei'),
+  };
+
+  const originalKey = await decryptPrivateKey(encryptedKey);
+  const { privateKey } = JSON.parse(originalKey);
+
+  const signer = await new ethers.Wallet(privateKey, provider);
+
+  const beanContract = await getTokenContract(signer);
+  await beanContract.multiSend(addresses, values, fee, options);
 };
 
 const createRandom = async () => {
