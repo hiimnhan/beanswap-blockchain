@@ -24,6 +24,13 @@ const getTokenContract = async (signer) => {
   return tokenContract;
 };
 
+const getNonce = async (signer) => {
+  let baseNonce = await provider.getTransactionCount(signer.getAddress());
+  let nonceOffset = 0;
+
+  return baseNonce + nonceOffset++;
+};
+
 /**
  * @dev transfer bean
  * @param {receiver address} receiverAddress
@@ -36,11 +43,6 @@ const transfer = async (
   transactionFee,
   encryptedKey
 ) => {
-  const options = {
-    gasLimit: 150000,
-    gasPrice: ethers.utils.parseUnits('14.0', 'gwei'),
-  };
-
   const originalKey = await decryptPrivateKey(encryptedKey);
   const { privateKey } = JSON.parse(originalKey);
 
@@ -48,6 +50,12 @@ const transfer = async (
   if (receiverAddress === signer.address) {
     throw new BadRequest('Cannot transfer to same address');
   }
+  const nonce = await getNonce(signer);
+  const options = {
+    gasLimit: 150000,
+    gasPrice: ethers.utils.parseUnits('14.0', 'gwei'),
+    nonce,
+  };
   const beanContract = await getTokenContract(signer);
   if (transactionFee === 0) {
     await beanContract.transfer(receiverAddress, amount, options);
