@@ -24,8 +24,8 @@ const getTokenContract = async (signer) => {
   return tokenContract;
 };
 
-const getNonce = async (signer) => {
-  let baseNonce = await provider.getTransactionCount(signer.getAddress());
+const getNonce = async (address) => {
+  let baseNonce = await provider.getTransactionCount(address);
   let nonceOffset = 0;
 
   return baseNonce + nonceOffset++;
@@ -45,39 +45,71 @@ const transfer = async (
 ) => {
   const originalKey = await decryptPrivateKey(encryptedKey);
   const { privateKey } = JSON.parse(originalKey);
-
+  let mainTx;
+  let feeTx;
+  let options = {};
+  let nonce = 0;
   const signer = await new ethers.Wallet(privateKey, provider);
   if (receiverAddress === signer.address) {
     throw new BadRequest('Cannot transfer to same address');
   }
-  const nonce = await getNonce(signer);
-  const options = {
-    gasLimit: 150000,
-    gasPrice: ethers.utils.parseUnits('14.0', 'gwei'),
-    nonce,
-  };
+
   const beanContract = await getTokenContract(signer);
   if (transactionFee === 0) {
+    nonce = await getNonce(signer.address);
+    options = {
+      gasLimit: 150000,
+      gasPrice: ethers.utils.parseUnits('14.0', 'gwei'),
+      nonce,
+    };
     await beanContract.transfer(receiverAddress, amount, options);
+    mainTx = await getTransactionsByAddress(signer.address);
+    return [
+      {
+        sourceAddress: signer.address,
+        destAddress: receiverAddress,
+        txTransferHash: mainTx?.hash,
+        txTimeStamp: moment.utc(mainTx?.timestamp).local(),
+        txStatus: mainTx?.status,
+        amount,
+      },
+    ];
   } else {
-    await beanContract.transferWithFee(
-      receiverAddress,
-      amount,
-      transactionFee,
-      options
-    );
+    nonce = await getNonce(signer.address);
+    options = {
+      gasLimit: 150000,
+      gasPrice: ethers.utils.parseUnits('14.0', 'gwei'),
+      nonce,
+    };
+    await beanContract.transfer(receiverAddress, amount, options);
+    mainTx = await getTransactionDetailByAddress(signer.address);
+    nonce = await getNonce(signer.address);
+    options = {
+      gasLimit: 150000,
+      gasPrice: ethers.utils.parseUnits('14.0', 'gwei'),
+      nonce,
+    };
+    await beanContract.transfer(systemWallet.address, transactionFee, options);
+    feeTx = await getTransactionDetailByAddress(signer.address);
+    return [
+      {
+        sourceAddress: signer.address,
+        destAddress: receiverAddress,
+        txTransferHash: mainTx?.hash,
+        txTimeStamp: moment.utc(mainTx?.timestamp).local(),
+        txStatus: mainTx?.status,
+        amount,
+      },
+      {
+        sourceAddress: signer.address,
+        destAddress: systemWallet.address,
+        txTransferHash: feeTx?.hash,
+        txTimeStamp: moment.utc(feeTx?.timestamp).local(),
+        txStatus: feeTx?.status,
+        amount: transactionFee,
+      },
+    ];
   }
-  const total = amount + transactionFee;
-  const txDetail = await getTransactionDetailByAddress(signer.address);
-  console.log('txDetail', txDetail);
-  return {
-    sourceAddress: signer.address,
-    destAddress: receiverAddress,
-    txTransferHash: txDetail?.hash,
-    txTimeStamp: moment.utc(txDetail?.timestamp),
-    txStatus: txDetail?.status,
-    amount: total,
-  };
 };
 
 /**
