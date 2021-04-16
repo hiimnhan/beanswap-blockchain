@@ -28,6 +28,11 @@ const checkValidAddress = (address) => {
   return ethers.utils.isAddress(address);
 };
 
+const checkValidTxId = (txId) => {
+  const regex = new RegExp(/^0x([A-Fa-f0-9]{64})$/);
+  return regex.test(txId);
+};
+
 const encryptData = (value) => {
   let encrypted;
   if (typeof value === 'string') {
@@ -59,6 +64,7 @@ export {
   convertBigNumberToNumber,
   formatCurrency,
   checkValidAddress,
+  checkValidTxId,
   encryptData,
   encryptPrivateKey,
   decryptPrivateKey,
