@@ -1,5 +1,6 @@
 require('dotenv').config();
 import { ethers } from 'ethers';
+import { NonceManager } from '@ethersproject/experimental';
 import { EnvConfig } from '../configs/env';
 import { scanRoutes, SCAN_TESTNET_URL } from '../constants';
 import { encryptData, encryptPrivateKey, decryptPrivateKey } from '../utils';
@@ -24,11 +25,12 @@ const getTokenContract = async (signer) => {
   return tokenContract;
 };
 
-const getNonce = async (address) => {
-  let baseNonce = await provider.getTransactionCount(address);
-  let nonceOffset = 0;
+const getNonce = async (signer) => {
+  const nonceManager = new NonceManager(signer);
+  nonceManager.incrementTransactionCount();
+  const nonce = await signer.getTransactionCount();
 
-  return baseNonce + nonceOffset++;
+  return nonce;
 };
 
 /**
@@ -56,7 +58,7 @@ const transfer = async (
 
   const beanContract = await getTokenContract(signer);
   if (transactionFee === 0) {
-    nonce = await getNonce(signer.address);
+    nonce = await getNonce(signer);
     options = {
       gasLimit: 150000,
       gasPrice: ethers.utils.parseUnits('14.0', 'gwei'),
@@ -75,7 +77,7 @@ const transfer = async (
       },
     ];
   } else {
-    nonce = await getNonce(signer.address);
+    nonce = await getNonce(signer);
     options = {
       gasLimit: 150000,
       gasPrice: ethers.utils.parseUnits('14.0', 'gwei'),
@@ -83,7 +85,7 @@ const transfer = async (
     };
     await beanContract.transfer(receiverAddress, amount, options);
     mainTx = await getTransactionDetailByAddress(signer.address);
-    nonce = await getNonce(signer.address);
+    nonce = await getNonce(signer);
     options = {
       gasLimit: 150000,
       gasPrice: ethers.utils.parseUnits('14.0', 'gwei'),
@@ -128,7 +130,7 @@ const getBalance = async (address) => {
  */
 const getTransactionDetailByAddress = async (address) => {
   const transaction = await getTransactionsByAddress(address, 1);
-  console.log('transaction', transaction);
+
   const txDetail = transaction[0];
   return txDetail;
 };
@@ -153,9 +155,20 @@ const multiSend = async (addresses, values, fee, encryptedKey) => {
   const { privateKey } = JSON.parse(originalKey);
 
   const signer = await new ethers.Wallet(privateKey, provider);
-
+  const actualFee = fee * addresses.length;
   const beanContract = await getTokenContract(signer);
-  await beanContract.multiSend(addresses, values, fee, options);
+  await beanContract.multiSend(addresses, values, actualFee, options);
+  const actualAmount = values[0] * values.length + actualFee;
+  const txDetail = await getTransactionDetailByAddress(signer.address);
+  return {
+    sourceAddress: signer.address,
+    destAddresses: addresses,
+    amount: actualAmount,
+    fee: actualFee,
+    txTransferHash: txDetail?.hash,
+    txTimeStamp: moment.utc(txDetail?.timestamp).local(),
+    txStatus: txDetail?.status,
+  };
 };
 
 const createRandom = async () => {

@@ -6,6 +6,7 @@ export const apiRoutes = {
   SET_MIN_FEE: '/fee',
   CREATE_WALLET: '/wallets',
   GET_TRANSACTIONS: '/transactions/:address',
+  MULTI_SEND: '/airdrop',
 };
 export const scanRoutes = {
   GET_TRANSACTIONS: 'api/txs/listByAccount/',

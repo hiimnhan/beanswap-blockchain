@@ -74,7 +74,7 @@ router.get(apiRoutes.GET_BALANCE, controllers.getBalance);
  *         - in: query
  *           name: limit
  *           schema:
- *             type: number             
+ *             type: number
  *           description: number of transactions to get
  *       responses:
  *         200:
@@ -149,5 +149,63 @@ router.get(apiRoutes.GET_TRANSACTIONS, controllers.getTransactionsByAddress);
  *                   example: 10
  */
 router.post(apiRoutes.CREATE_TRANSACTION, controllers.createTransaction);
+/**
+ * @swagger
+ * /api/airdrop:
+ *   post:
+ *     summary: transfer bean from one to other addresses
+ *     parameters:
+ *       - in: header
+ *         name: encryptedKey
+ *         schema:
+ *           type: string
+ *         required: true
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               receiverAddresses:
+ *                 type: array
+ *                 description: array of receivers
+ *               amounts:
+ *                 type: array
+ *                 description: array of amount
+ *               transactionFee:
+ *                 type: integer
+ *                 description: txs fee
+ *           example:
+ *             receiverAddresses: '["0xDf9a46950E9552335430CD952AaafB4fd5d63fCD", "0xe0D6c4F749Dd630d414a0a39Ea798d252a526b1d", "0x01407bccaE25f32b560f5D0645B30b9C1797DBE0"]'
+ *             amounts: [5000, 5000, 5000]
+ *             transactionFee: 500
+ *     responses:
+ *       201:
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 sourceAddress:
+ *                   type: string
+ *                   example: '0x35b02087a0E6A3480fdC08c8A3FEDE2DFB1Ed472'
+ *                 destAddress:
+ *                   type: string
+ *                   example: '0x2767B8c9838eDa3010B9e4310d2D1B63469e5F46'
+ *                 txTransferHash:
+ *                   type: string
+ *                   example: '0xcd7369ae5d2b033463c92c7ac03bd9a5f9294cda110feae1bd039ef8c63cbf2c'
+ *                 txTimestamp:
+ *                   type: string
+ *                   example: '2021-03-05T14:59:41.000Z'
+ *                 txStatus:
+ *                   type: boolean
+ *                   example: true
+ *                 amount:
+ *                   type: integer
+ *                   example: 10
+ */
+router.post(apiRoutes.MULTI_SEND, controllers.multiSend);
 
 export default router;

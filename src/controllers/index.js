@@ -27,6 +27,22 @@ const createTransaction = async (req, res, next) => {
   }
 };
 
+const multiSend = async (req, res, next) => {
+  try {
+    const { receiverAddresses, amounts, transactionFee } = req.body;
+    const { encryptedkey } = req.headers;
+    const transferData = await services.multiSend(
+      receiverAddresses,
+      amounts,
+      transactionFee,
+      encryptedkey
+    );
+    res.status(201).json(transferData);
+  } catch (error) {
+    next(error);
+  }
+};
+
 const getBalance = async (req, res, next) => {
   try {
     const { address } = req.params;
@@ -64,4 +80,5 @@ export const controllers = {
   createTransaction,
   getBalance,
   getTransactionsByAddress,
+  multiSend,
 };
