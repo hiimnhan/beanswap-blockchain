@@ -9,6 +9,7 @@ export const apiRoutes = {
   MULTI_SEND: '/airdrop',
 };
 export const scanRoutes = {
-  GET_TRANSACTIONS: 'api/txs/listByAccount/',
+  GET_TRANSACTIONS: 'txs/listByAccount/',
+  GET_TRANSACTION_DETAIL: 'txs/',
 };
-export const SCAN_TESTNET_URL = 'https://scan.testnet.tomochain.com/';
+export const SCAN_TESTNET_URL = 'https://scan.testnet.tomochain.com/api/';

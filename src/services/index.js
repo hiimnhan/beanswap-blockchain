@@ -6,7 +6,7 @@ import { scanRoutes, SCAN_TESTNET_URL } from '../constants';
 import { encryptData, encryptPrivateKey, decryptPrivateKey } from '../utils';
 import * as moment from 'moment';
 import { BadRequest } from '../helpers/error';
-const axios = require('axios');
+import axios from 'axios';
 
 export const initProvider = () => {
   return new ethers.providers.JsonRpcProvider(EnvConfig.RPC_ENPOINT_TOMO);
@@ -64,15 +64,19 @@ const transfer = async (
       gasPrice: ethers.utils.parseUnits('14.0', 'gwei'),
       nonce,
     };
-    await beanContract.transfer(receiverAddress, amount, options);
-    mainTx = await getTransactionsByAddress(signer.address);
+    const mainTx = await beanContract.transfer(
+      receiverAddress,
+      amount,
+      options
+    );
+    const mainTxDetail = await getTransactionDetail(mainTx.hash);
     return [
       {
         sourceAddress: signer.address,
         destAddress: receiverAddress,
-        txTransferHash: mainTx?.hash,
-        txTimeStamp: moment.utc(mainTx?.timestamp).local(),
-        txStatus: mainTx?.status,
+        txTransferHash: mainTxDetail?.hash,
+        txTimeStamp: moment.utc(mainTxDetail?.timestamp).local(),
+        txStatus: mainTxDetail?.status,
         amount,
       },
     ];
@@ -83,31 +87,39 @@ const transfer = async (
       gasPrice: ethers.utils.parseUnits('14.0', 'gwei'),
       nonce,
     };
-    await beanContract.transfer(receiverAddress, amount, options);
-    mainTx = await getTransactionDetailByAddress(signer.address);
+    const mainTx = await beanContract.transfer(
+      receiverAddress,
+      amount,
+      options
+    );
+    const mainTxDetail = await getTransactionDetail(mainTx.hash);
     nonce = await getNonce(signer);
     options = {
       gasLimit: 150000,
       gasPrice: ethers.utils.parseUnits('14.0', 'gwei'),
       nonce,
     };
-    await beanContract.transfer(systemWallet.address, transactionFee, options);
-    feeTx = await getTransactionDetailByAddress(signer.address);
+    const feeTx = await beanContract.transfer(
+      systemWallet.address,
+      transactionFee,
+      options
+    );
+    const feeTxDetail = await getTransactionDetail(feeTx.hash);
     return [
       {
         sourceAddress: signer.address,
         destAddress: receiverAddress,
-        txTransferHash: mainTx?.hash,
-        txTimeStamp: moment.utc(mainTx?.timestamp).local(),
-        txStatus: mainTx?.status,
+        txTransferHash: mainTxDetail?.hash,
+        txTimeStamp: moment.utc(mainTxDetail?.timestamp).local(),
+        txStatus: mainTxDetail?.status,
         amount,
       },
       {
         sourceAddress: signer.address,
         destAddress: systemWallet.address,
-        txTransferHash: feeTx?.hash,
-        txTimeStamp: moment.utc(feeTx?.timestamp).local(),
-        txStatus: feeTx?.status,
+        txTransferHash: feeTxDetail?.hash,
+        txTimeStamp: moment.utc(feeTxDetail?.timestamp).local(),
+        txStatus: feeTxDetail?.status,
         amount: transactionFee,
       },
     ];
@@ -157,20 +169,31 @@ const multiSend = async (addresses, values, fee, encryptedKey) => {
   const signer = await new ethers.Wallet(privateKey, provider);
   const actualFee = fee * addresses.length;
   const beanContract = await getTokenContract(signer);
-  await beanContract.multiSend(addresses, values, actualFee, options);
+  const data = await beanContract.multiSend(
+    addresses,
+    values,
+    actualFee,
+    options
+  );
   const actualAmount = values[0] * values.length + actualFee;
-  const txDetail = await getTransactionDetailByAddress(signer.address);
+  const txDetail = await getTransactionDetail(data.hash);
   return {
     sourceAddress: signer.address,
     destAddresses: addresses,
     amount: actualAmount,
     fee: actualFee,
-    txTransferHash: txDetail?.hash,
+    txTransferHash: data?.hash,
     txTimeStamp: moment.utc(txDetail?.timestamp).local(),
     txStatus: txDetail?.status,
   };
 };
 
+const getTransactionDetail = async (tx) => {
+  const detail = await axios.get(
+    `${SCAN_TESTNET_URL}${scanRoutes.GET_TRANSACTION_DETAIL}${tx}`
+  );
+  return detail;
+};
 const createRandom = async () => {
   const newWallet = await ethers.Wallet.createRandom().connect(provider);
   const { privateKey, address } = newWallet;
@@ -190,4 +213,5 @@ export const services = {
   getTransactionsByAddress,
   multiSend,
   createRandom,
+  getTransactionDetail,
 };
