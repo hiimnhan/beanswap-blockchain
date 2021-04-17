@@ -153,10 +153,10 @@ router.get(apiRoutes.GET_TRANSACTIONS, controllers.getTransactionsByAddress);
  *                     type: integer
  *                     example: 0
  */
-router.post(apiRoutes.CREATE_TRANSACTION, controllers.createTransaction);
+// router.post(apiRoutes.CREATE_TRANSACTION, controllers.createTransaction);
 /**
  * @swagger
- * /api/airdrop:
+ * /api/transactions:
  *   post:
  *     summary: transfer bean from one to other addresses
  *     parameters:
@@ -214,6 +214,6 @@ router.post(apiRoutes.CREATE_TRANSACTION, controllers.createTransaction);
  *                     type: integer
  *                     example: 0
  */
-router.post(apiRoutes.MULTI_SEND, controllers.multiSend);
+router.post(apiRoutes.CREATE_TRANSACTION, controllers.multiSend);
 
 export default router;
