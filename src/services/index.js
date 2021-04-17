@@ -47,10 +47,10 @@ const transfer = async (
 ) => {
   const originalKey = await decryptPrivateKey(encryptedKey);
   const { privateKey } = JSON.parse(originalKey);
-  let mainTx;
-  let feeTx;
-  let options = {};
-  let nonce = 0;
+  const options = {
+    gasLimit: 150000,
+    gasPrice: ethers.utils.parseUnits('14.0', 'gwei'),
+  };
   const signer = await new ethers.Wallet(privateKey, provider);
   if (receiverAddress === signer.address) {
     throw new BadRequest('Cannot transfer to same address');
@@ -58,12 +58,6 @@ const transfer = async (
 
   const beanContract = await getTokenContract(signer);
   if (transactionFee === 0) {
-    nonce = await getNonce(signer);
-    options = {
-      gasLimit: 150000,
-      gasPrice: ethers.utils.parseUnits('14.0', 'gwei'),
-      nonce,
-    };
     const mainTx = await beanContract.transfer(
       receiverAddress,
       amount,
@@ -74,53 +68,30 @@ const transfer = async (
       {
         sourceAddress: signer.address,
         destAddress: receiverAddress,
-        txTransferHash: mainTxDetail?.hash,
+        txTransferHash: mainTx?.hash,
         txTimeStamp: moment.utc(mainTxDetail?.timestamp).local(),
-        txStatus: mainTxDetail?.status,
+        txStatus: mainTxDetail?.status === 200 ? true : false,
         amount,
+        fee: 0,
       },
     ];
   } else {
-    nonce = await getNonce(signer);
-    options = {
-      gasLimit: 150000,
-      gasPrice: ethers.utils.parseUnits('14.0', 'gwei'),
-      nonce,
-    };
-    const mainTx = await beanContract.transfer(
+    const tx = await beanContract.transferWithFee(
       receiverAddress,
       amount,
-      options
-    );
-    const mainTxDetail = await getTransactionDetail(mainTx.hash);
-    nonce = await getNonce(signer);
-    options = {
-      gasLimit: 150000,
-      gasPrice: ethers.utils.parseUnits('14.0', 'gwei'),
-      nonce,
-    };
-    const feeTx = await beanContract.transfer(
-      systemWallet.address,
       transactionFee,
       options
     );
-    const feeTxDetail = await getTransactionDetail(feeTx.hash);
+    const txDetail = await getTransactionDetail(tx.hash);
     return [
       {
         sourceAddress: signer.address,
         destAddress: receiverAddress,
-        txTransferHash: mainTxDetail?.hash,
-        txTimeStamp: moment.utc(mainTxDetail?.timestamp).local(),
-        txStatus: mainTxDetail?.status,
-        amount,
-      },
-      {
-        sourceAddress: signer.address,
-        destAddress: systemWallet.address,
-        txTransferHash: feeTxDetail?.hash,
-        txTimeStamp: moment.utc(feeTxDetail?.timestamp).local(),
-        txStatus: feeTxDetail?.status,
-        amount: transactionFee,
+        txTransferHash: tx?.hash,
+        txTimeStamp: moment.utc(txDetail?.timestamp).local(),
+        txStatus: txDetail?.status === 200 ? true : false,
+        amount: amount + transactionFee,
+        fee: transactionFee,
       },
     ];
   }
@@ -134,17 +105,6 @@ const getBalance = async (address) => {
   const beanContract = await getTokenContract(systemWallet);
   const balance = await beanContract.balanceOf(address);
   return balance;
-};
-
-/**
- *
- * @param {address to get txId} address
- */
-const getTransactionDetailByAddress = async (address) => {
-  const transaction = await getTransactionsByAddress(address, 1);
-
-  const txDetail = transaction[0];
-  return txDetail;
 };
 
 const getTransactionsByAddress = async (address, limit = 20) => {
@@ -184,14 +144,13 @@ const multiSend = async (addresses, values, fee, encryptedKey) => {
     fee: actualFee,
     txTransferHash: data?.hash,
     txTimeStamp: moment.utc(txDetail?.timestamp).local(),
-    txStatus: txDetail?.status,
+    txStatus: txDetail?.status === 200 ? true : false,
   };
 };
 
 const getTransactionDetail = async (tx) => {
-  const detail = await axios.get(
-    `${SCAN_TESTNET_URL}${scanRoutes.GET_TRANSACTION_DETAIL}${tx}`
-  );
+  const uri = `${SCAN_TESTNET_URL}${scanRoutes.GET_TRANSACTION_DETAIL}${tx}`.trim();
+  const detail = await axios.get(uri);
   return detail;
 };
 const createRandom = async () => {
