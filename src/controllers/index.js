@@ -13,12 +13,12 @@ const createWallet = async (req, res, next) => {
 
 const createTransaction = async (req, res, next) => {
   try {
-    const { receiverAddress, amount, transactionFee } = req.body;
+    const { receiverAddress, amount, fee } = req.body;
     const { encryptedkey } = req.headers;
     const transferData = await services.transfer(
       receiverAddress,
       amount,
-      transactionFee,
+      fee,
       encryptedkey
     );
     res.status(201).json(transferData);
@@ -29,16 +29,21 @@ const createTransaction = async (req, res, next) => {
 
 const multiSend = async (req, res, next) => {
   try {
-    const { receiverAddresses, amounts, transactionFee } = req.body;
     const { encryptedkey } = req.headers;
+    const receiverAddresses = req.body.map(
+      ({ receiverAddress }) => receiverAddress
+    );
+    const amounts = req.body.map(({ amount }) => amount);
+    const fees = req.body.map(({ fee }) => fee);
     const transferData = await services.multiSend(
       receiverAddresses,
       amounts,
-      transactionFee,
+      fees[0],
       encryptedkey
     );
     res.status(201).json(transferData);
   } catch (error) {
+    console.log(error);
     next(error);
   }
 };

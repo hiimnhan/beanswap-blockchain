@@ -115,38 +115,43 @@ router.get(apiRoutes.GET_TRANSACTIONS, controllers.getTransactionsByAddress);
  *               amount:
  *                 type: integer
  *                 description: amount of beans to transfer
- *               transactionFee:
+ *               fee:
  *                 type: integer
  *                 description: txs fee
  *           example:
  *             receiverAddress: '0x2767B8c9838eDa3010B9e4310d2D1B63469e5F46'
- *             amount: 10
- *             transactionFee: 1
+ *             amount: 1000
+ *             fee: 100
  *     responses:
  *       201:
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 sourceAddress:
- *                   type: string
- *                   example: '0x35b02087a0E6A3480fdC08c8A3FEDE2DFB1Ed472'
- *                 destAddress:
- *                   type: string
- *                   example: '0x2767B8c9838eDa3010B9e4310d2D1B63469e5F46'
- *                 txTransferHash:
- *                   type: string
- *                   example: '0xcd7369ae5d2b033463c92c7ac03bd9a5f9294cda110feae1bd039ef8c63cbf2c'
- *                 txTimestamp:
- *                   type: string
- *                   example: '2021-03-05T14:59:41.000Z'
- *                 txStatus:
- *                   type: boolean
- *                   example: true
- *                 amount:
- *                   type: integer
- *                   example: 10
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   sourceAddress:
+ *                     type: string
+ *                     example: '0x35b02087a0E6A3480fdC08c8A3FEDE2DFB1Ed472'
+ *                   destAddress:
+ *                     type: string
+ *                     example: '0x2767B8c9838eDa3010B9e4310d2D1B63469e5F46'
+ *                   txTransferHash:
+ *                     type: string
+ *                     example: '0xcd7369ae5d2b033463c92c7ac03bd9a5f9294cda110feae1bd039ef8c63cbf2c'
+ *                   txTimestamp:
+ *                     type: string
+ *                     example: '2021-03-05T14:59:41.000Z'
+ *                   txStatus:
+ *                     type: boolean
+ *                     example: true
+ *                   amount:
+ *                     type: integer
+ *                     example: 10
+ *                   fee:
+ *                     type: integer
+ *                     example: 0
  */
 router.post(apiRoutes.CREATE_TRANSACTION, controllers.createTransaction);
 /**
@@ -165,46 +170,49 @@ router.post(apiRoutes.CREATE_TRANSACTION, controllers.createTransaction);
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             properties:
- *               receiverAddresses:
- *                 type: array
- *                 description: array of receivers
- *               amounts:
- *                 type: array
- *                 description: array of amount
- *               transactionFee:
- *                 type: integer
- *                 description: txs fee
- *           example:
- *             receiverAddresses: '["0xDf9a46950E9552335430CD952AaafB4fd5d63fCD", "0xe0D6c4F749Dd630d414a0a39Ea798d252a526b1d", "0x01407bccaE25f32b560f5D0645B30b9C1797DBE0"]'
- *             amounts: [5000, 5000, 5000]
- *             transactionFee: 500
+ *             type: array
+ *             items:
+ *               type: object
+ *               properties:
+ *                 receiverAddress:
+ *                   type: string
+ *                   example: "0xBd7DF81B7C2ED9930DeC8774EB76c648079C4230"
+ *                 amount:
+ *                   type: integer
+ *                   example: 2000
+ *                 fee:
+ *                   type: integer
+ *                   example: 200
  *     responses:
  *       201:
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 sourceAddress:
- *                   type: string
- *                   example: '0x35b02087a0E6A3480fdC08c8A3FEDE2DFB1Ed472'
- *                 destAddress:
- *                   type: string
- *                   example: '0x2767B8c9838eDa3010B9e4310d2D1B63469e5F46'
- *                 txTransferHash:
- *                   type: string
- *                   example: '0xcd7369ae5d2b033463c92c7ac03bd9a5f9294cda110feae1bd039ef8c63cbf2c'
- *                 txTimestamp:
- *                   type: string
- *                   example: '2021-03-05T14:59:41.000Z'
- *                 txStatus:
- *                   type: boolean
- *                   example: true
- *                 amount:
- *                   type: integer
- *                   example: 10
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   sourceAddress:
+ *                     type: string
+ *                     example: '0x35b02087a0E6A3480fdC08c8A3FEDE2DFB1Ed472'
+ *                   destAddress:
+ *                     type: string
+ *                     example: '0x2767B8c9838eDa3010B9e4310d2D1B63469e5F46'
+ *                   txTransferHash:
+ *                     type: string
+ *                     example: '0xcd7369ae5d2b033463c92c7ac03bd9a5f9294cda110feae1bd039ef8c63cbf2c'
+ *                   txTimestamp:
+ *                     type: string
+ *                     example: '2021-03-05T14:59:41.000Z'
+ *                   txStatus:
+ *                     type: boolean
+ *                     example: true
+ *                   amount:
+ *                     type: integer
+ *                     example: 10
+ *                   fee:
+ *                     type: integer
+ *                     example: 0
  */
 router.post(apiRoutes.MULTI_SEND, controllers.multiSend);
 
