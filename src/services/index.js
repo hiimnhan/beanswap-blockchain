@@ -144,7 +144,7 @@ const multiSend = async (addresses, values, fee, encryptedKey) => {
     fee: actualFee,
     txTransferHash: data?.hash,
     txTimeStamp: moment.utc(txDetail?.timestamp).local(),
-    txStatus: txDetail?.status === 200 ? true : false,
+    txStatus: txDetail?.data?.status ?? true,
   };
 };
 
