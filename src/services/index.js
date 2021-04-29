@@ -113,7 +113,7 @@ const multiSend = async (addresses, values, fee, encryptedKey) => {
   const { privateKey } = JSON.parse(originalKey);
 
   const signer = await new ethers.Wallet(privateKey, provider);
-  const actualFee = fee * addresses.length;
+  const actualFee = fee;
   const beanContract = await getTokenContract(signer);
   const data = await beanContract.multiSend(addresses, values, actualFee);
   const actualAmount = values[0] * values.length + actualFee;
