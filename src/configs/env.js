@@ -1,11 +1,12 @@
 
-const BeanContract = require('../../build/contracts/MyTRC21Mintable.json')
+const BeanContract = require('../Bean.json');
 const EnvConfig = {
-    RPC_ENPOINT: 'https://rpc.testnet.tomochain.com',
+    RPC_ENPOINT_TOMO: 'https://rpc.testnet.tomochain.com',
+    RPC_ENPOINT_LOCAL: 'HTTP://127.0.0.1:7545',
     CHAIN_ID: 89,
     BEAN_ABI: BeanContract.abi,
-    BEAN_ADDRESS: '0xdEC5505c38A6b61502136a16951d33781E4C1D40',
+    BEAN_ADDRESS: '0xc6849b58D412D3dA5dAb2abe37b99A0237038897',
     SYSTEM_WALLET_ADDRESS: '0xc881070f3cF39B0bEfe1738Fc78D97a90E34a959'
 }
 
-export default EnvConfig;
+module.exports = {EnvConfig}
